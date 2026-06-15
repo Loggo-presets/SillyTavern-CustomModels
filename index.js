@@ -117,24 +117,9 @@ function initSelect(sel) {
     const updateGroups = () => {
         selectObserver.disconnect();
 
-        // 1. Ensure our grp is the first child of sel
+        // Ensure our grp is the first child of sel
         if (sel.firstChild !== grp) {
             sel.insertBefore(grp, sel.firstChild);
-        }
-
-        // 2. Wrap raw option elements
-        const rawOptions = Array.from(sel.childNodes).filter(child => child.tagName === 'OPTION');
-        if (rawOptions.length > 0) {
-            let defaultGrp = sel.querySelector('optgroup[data-default-group="true"]');
-            if (!defaultGrp) {
-                defaultGrp = document.createElement('optgroup');
-                defaultGrp.label = 'Default Models';
-                defaultGrp.dataset.defaultGroup = 'true';
-            }
-            for (const opt of rawOptions) {
-                defaultGrp.appendChild(opt);
-            }
-            sel.appendChild(defaultGrp);
         }
 
         selectObserver.observe(sel, { childList: true });
