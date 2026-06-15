@@ -39,6 +39,8 @@ function initSelect(sel) {
     if (!match) return;
     const provider = match[1];
 
+    if (provider.toLowerCase().startsWith('custom')) return;
+
     if (!settings.provider[provider]) {
         settings.provider[provider] = [];
     }
