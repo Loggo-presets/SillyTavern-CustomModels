@@ -44,7 +44,21 @@ function initSelect(sel) {
     }
     const models = settings.provider[provider];
 
-    const h4 = sel.parentElement?.querySelector('h4');
+    // Find the H4 label for this select. First check previous siblings.
+    let h4 = null;
+    let sibling = sel.previousElementSibling;
+    while (sibling) {
+        if (sibling.tagName === 'H4') {
+            h4 = sibling;
+            break;
+        }
+        sibling = sibling.previousElementSibling;
+    }
+    // Fallback to parent's querySelector if not found in siblings
+    if (!h4) {
+        h4 = sel.parentElement?.querySelector('h4');
+    }
+
     const btn = document.createElement('div');
     btn.classList.add('stcm--btn', 'menu_button', 'fa-solid', 'fa-fw', 'fa-pen-to-square');
     btn.title = 'Edit custom models';
@@ -83,7 +97,7 @@ function initSelect(sel) {
     if (h4) {
         h4.append(btn);
     } else {
-        sel.parentElement?.insertBefore(btn, sel);
+        sel.after(btn);
     }
 
     const populateOptGroup = () => {
@@ -99,7 +113,35 @@ function initSelect(sel) {
     const grp = document.createElement('optgroup');
     grp.label = 'Custom Models';
     populateOptGroup();
-    sel.insertBefore(grp, sel.children[0]);
+
+    const updateGroups = () => {
+        selectObserver.disconnect();
+
+        // 1. Ensure our grp is the first child of sel
+        if (sel.firstChild !== grp) {
+            sel.insertBefore(grp, sel.firstChild);
+        }
+
+        // 2. Wrap raw option elements
+        const rawOptions = Array.from(sel.childNodes).filter(child => child.tagName === 'OPTION');
+        if (rawOptions.length > 0) {
+            let defaultGrp = sel.querySelector('optgroup[data-default-group="true"]');
+            if (!defaultGrp) {
+                defaultGrp = document.createElement('optgroup');
+                defaultGrp.label = 'Default Models';
+                defaultGrp.dataset.defaultGroup = 'true';
+            }
+            for (const opt of rawOptions) {
+                defaultGrp.appendChild(opt);
+            }
+            sel.appendChild(defaultGrp);
+        }
+
+        selectObserver.observe(sel, { childList: true });
+    };
+
+    const selectObserver = new MutationObserver(updateGroups);
+    updateGroups();
 
     if (settings[`${provider}_model`] && models.includes(settings[`${provider}_model`])) {
         sel.value = settings[`${provider}_model`];
